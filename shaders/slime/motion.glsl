@@ -125,7 +125,7 @@ void main() {
     agents.agents[idx].position = new_pos;
     agents.agents[idx].age += 0.0005;
 
-    vec4 color = vec4(hsv2rgb(vec3(0.5 * (1 + sin(agents.agents[idx].age)), 0.7, 1)), 1);
+    vec4 color = vec4(hsv2rgb(vec3(0.5 * (1 + sin(agents.agents[idx].age)), 0.9, 1)), 1);
     // vec4 color = vec4(0.2, 0.55, 0.8, 1);
     imageStore(img, ivec2(new_pos.x, new_pos.y), color);
 }

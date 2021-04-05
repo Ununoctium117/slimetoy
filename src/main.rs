@@ -41,15 +41,31 @@ pub mod trail_decay {
     }
 }
 
-const AGENTS: usize = 100_000;
-const AGENT_MOVE_SPEED: f32 = 1.25;
-const AGENT_SENSOR_SIZE: i32 = 2;
-const AGENT_SENSOR_DISTANCE: f32 = 5.0;
+const AGENTS: usize = 250_000;
+
+const AGENT_MOVE_SPEED_RANGE: Range<f32> = 0.0..100.0;
+const AGENT_SENSOR_SIZE_RANGE: Range<i32> = 0..3;
+const AGENT_SENSOR_DISTANCE_RANGE: Range<f32> = 1.0..25.0;
+const AGENT_SENSOR_ANGLE_RANGE: Range<f32> = 0.0..std::f32::consts::PI;
+const AGENT_TURN_RATE_RANGE: Range<f32> = 0.0..std::f32::consts::PI;
+const TRAIL_DECAY_RATE_RANGE: Range<f32> = 0.0..1.0;
+const TRAIL_BLUR_RATE_RANGE: Range<f32> = 0.0..1.0;
+
+const AGENT_MOVE_SPEED: f32 = 1.9;
+const AGENT_SENSOR_SIZE: i32 = 1;
+const AGENT_SENSOR_DISTANCE: f32 = 8.0;
 const AGENT_SENSOR_ANGLE: f32 = std::f32::consts::PI / 4.0;
 const AGENT_TURN_RATE: f32 = std::f32::consts::PI / 4.0;
 
-const TRAIL_DECAY_RATE: f32 = 0.02;
-const TRAIL_BLUR_RATE: f32 = 0.4;
+const TRAIL_DECAY_RATE: f32 = 0.01;
+const TRAIL_BLUR_RATE: f32 = 0.2;
+
+// TODO:
+//  UI for changing constants
+//  Pause/resume constant that enables/disables the shaders
+//  More constants (saturation, lightness, hue shift speed, blur radius, enable/disable torus mode)
+//  Fix shader rng
+//  Always draw to buffer image then copy that to swapchain
 
 fn main() {
     let instance = {
@@ -70,10 +86,11 @@ fn main() {
 
     let event_loop = EventLoop::new();
     let surface = WindowBuilder::new()
-        .with_title("Cool Rust Program")
+        .with_title("SlimeToy")
         .with_inner_size(LogicalSize::new(1920, 1080))
         // .with_maximized(true)
         .with_fullscreen(None)
+        .with_resizable(false)
         .with_decorations(true)
         .build_vk_surface(&event_loop, instance.clone())
         .expect("failed to create window surface");
@@ -162,7 +179,8 @@ fn main() {
                 dims.height as f32 / 2.0 + (r * theta.sin()),
             ],
             // angle: std::f32::consts::PI - theta, // point back towards the center
-            angle: theta, // point outwards
+            // angle: theta, // point outwards
+            angle: rng.gen::<f32>() * std::f32::consts::TAU, // point randomly
             age: 0.0,
         }
     });
