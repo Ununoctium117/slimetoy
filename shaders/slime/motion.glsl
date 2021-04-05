@@ -43,10 +43,25 @@ float sense(Agent agent, float directionOffset) {
         for (int offsetY = -constants.sensor_size; offsetY <= constants.sensor_size; offsetY++) {
             ivec2 pos = ivec2(center + vec2(offsetX, offsetY));
 
-            if (pos.x >= 0 && pos.x < imgS.x && pos.y >= 0 && pos.y < imgS.y) {
-                vec4 color = imageLoad(img, pos);
-                sum += color.x + color.y + color.z;
+            // if (pos.x >= 0 && pos.x < imgS.x && pos.y >= 0 && pos.y < imgS.y) {
+            //     vec4 color = imageLoad(img, pos);
+            //     sum += color.x + color.y + color.z;
+            // }
+
+            if (pos.x < 0) {
+                pos.x += int(imgS.x);
+            } else if (pos.x >= imgS.x) {
+                pos.x -= int(imgS.x);
             }
+
+            if (pos.y < 0) {
+                pos.y += int(imgS.y);
+            } else if (pos.y >= imgS.y) {
+                pos.y -= int(imgS.y);
+            }
+
+            vec4 color = imageLoad(img, pos);
+            sum += color.x + color.y + color.z;
         }
     }
 
@@ -89,16 +104,28 @@ void main() {
     vec2 direction = vec2(cos(agent.angle), sin(agent.angle));
     vec2 new_pos = agent.position + (direction * constants.move_speed);
 
-    if (new_pos.x < 0 || new_pos.x >= imgS.x || new_pos.y < 0 || new_pos.y >= imgS.y) {
-        new_pos.x = min(imgS.x - 0.01, max(0, new_pos.x));
-        new_pos.y = min(imgS.y - 0.01, max(0, new_pos.y));
-        agents.agents[idx].angle = rand * 2 * PI;
+    if (new_pos.x < 0) {
+        new_pos.x += imgS.x - 0.01;
+    } else if (new_pos.x >= imgS.x) {
+        new_pos.x -= imgS.x - 0.01;
     }
+
+    if (new_pos.y < 0) {
+        new_pos.y += imgS.y - 0.01;
+    } else if (new_pos.y >= imgS.y) {
+        new_pos.y -= imgS.y - 0.01;
+    }
+
+    // if (new_pos.x < 0 || new_pos.x >= imgS.x || new_pos.y < 0 || new_pos.y >= imgS.y) {
+    //     new_pos.x = min(imgS.x - 0.01, max(0, new_pos.x));
+    //     new_pos.y = min(imgS.y - 0.01, max(0, new_pos.y));
+    //     agents.agents[idx].angle = rand * 2 * PI;
+    // }
 
     agents.agents[idx].position = new_pos;
     agents.agents[idx].age += 0.0005;
 
-    vec4 color = vec4(hsv2rgb(vec3(sin(agents.agents[idx].age), 0.7, 1)), 1);
+    vec4 color = vec4(hsv2rgb(vec3(0.5 * (1 + sin(agents.agents[idx].age)), 0.7, 1)), 1);
     // vec4 color = vec4(0.2, 0.55, 0.8, 1);
     imageStore(img, ivec2(new_pos.x, new_pos.y), color);
 }

@@ -74,7 +74,7 @@ fn main() {
         .with_inner_size(LogicalSize::new(1920, 1080))
         // .with_maximized(true)
         .with_fullscreen(None)
-        .with_decorations(false)
+        .with_decorations(true)
         .build_vk_surface(&event_loop, instance.clone())
         .expect("failed to create window surface");
 
@@ -161,7 +161,8 @@ fn main() {
                 dims.width as f32 / 2.0 + (r * theta.cos()),
                 dims.height as f32 / 2.0 + (r * theta.sin()),
             ],
-            angle: std::f32::consts::PI - theta, // point back towards the center
+            // angle: std::f32::consts::PI - theta, // point back towards the center
+            angle: theta, // point outwards
             age: 0.0,
         }
     });
@@ -179,7 +180,9 @@ fn main() {
 
     let mut recreate_swapchain = false;
     let mut previous_frame_end = Some(sync::now(device.clone()).boxed());
-    // let mut frame_timer = std::time::Instant::now();
+    let mut frame_timer = std::time::Instant::now();
+    let mut fps_update_in = 500;
+    let mut total_time = std::time::Duration::from_millis(0);
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
@@ -209,8 +212,17 @@ fn main() {
         Event::MainEventsCleared => {}
 
         Event::RedrawEventsCleared => {
-            // println!("frame: {:?}", std::time::Instant::now() - frame_timer);
-            // frame_timer = std::time::Instant::now();
+            total_time += std::time::Instant::now() - frame_timer;
+            frame_timer = std::time::Instant::now();
+            fps_update_in -= 1;
+            if fps_update_in == 0 {
+                println!(
+                    "FPS over last 500 frames: {:?}",
+                    1000.0 / (total_time.as_millis() as f32 / 500.0)
+                );
+                fps_update_in = 500;
+                total_time = std::time::Duration::from_millis(0);
+            }
 
             previous_frame_end.as_mut().unwrap().cleanup_finished();
 
@@ -283,7 +295,7 @@ fn main() {
                 )
                 .unwrap()
                 .dispatch(
-                    [dimensions[0], dimensions[1], 1],
+                    [dimensions[0] / 8, dimensions[1] / 8, 1],
                     trail_decay_pipeline.clone(),
                     trail_decay_set0.clone(),
                     trail_decay::ty::Constants {
